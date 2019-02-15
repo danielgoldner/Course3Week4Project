@@ -1,0 +1,46 @@
+SELECT ob.row_date,
+    date_part('dow'::text, ob.row_date) AS weekday,
+    ob.payment_count,
+    ob.payment_collected,
+        CASE
+            WHEN ob.payment_count > 0 THEN round(ob.payment_collected / ob.payment_count::numeric, 2)
+            ELSE 0::numeric
+        END AS avg_payment,
+    spp.sif_count,
+    spp.settlement_adj,
+    spp.settle_collected,
+        CASE
+            WHEN spp.sif_count > 0 THEN round(spp.settlement_adj / spp.sif_count::numeric, 2)
+            ELSE 0::numeric
+        END AS avg_settlement_adj,
+        CASE
+            WHEN spp.sif_count > 0 THEN round(spp.settle_collected / spp.sif_count::numeric, 2)
+            ELSE 0::numeric
+        END AS avg_settle_payment,
+        CASE
+            WHEN spp.sif_count > 0 THEN round(spp.settle_collected / spp.sif_count::numeric / (spp.settlement_adj / spp.sif_count::numeric), 2)
+            ELSE 0::numeric
+        END AS settle_cost_ratio,
+    case when ob.payment_collected > 0 then round(spp.settle_collected / ob.payment_collected, 2) 
+    else 0::numeric
+    end AS sif_share,
+    spp.pif_count,
+    spp.pif_collected,
+        CASE
+            WHEN spp.pif_count > 0 THEN round(spp.pif_collected / spp.pif_count::numeric, 2)
+            ELSE 0::numeric
+        END AS avg_pif_payment,
+    case when ob.payment_collected > 0 then round(spp.pif_collected / ob.payment_collected, 2) 
+    else 0::numeric
+    end AS pif_share,
+    spp.partial_count,
+    spp.partial_collected,
+        CASE
+            WHEN spp.partial_count > 0 THEN round(spp.partial_collected / spp.partial_count::numeric, 2)
+            ELSE 0::numeric
+        END AS avg_partial_payment,
+    case when ob.payment_collected > 0 then round(spp.partial_collected / ob.payment_collected, 2)
+    else 0::numeric
+    end AS partial_share
+   FROM v_es_outbound ob
+     JOIN es_sif_pif_partial spp ON spp.row_date = ob.row_date;
