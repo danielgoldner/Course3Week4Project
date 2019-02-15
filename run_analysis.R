@@ -43,10 +43,10 @@ bind_rows(train_data, test_data) -> train_test_data
 # Join in activity labels and select only the needed columns
 inner_join(train_test_data, activity_labels) -> train_test_data
 select(train_test_data, subject, activity_name, contains('mean'), contains('std')) -> train_test_data
-print(train_test_data)
 
 # Group by subject and activity. Find mean of all columns.
 by_subject_activity <- group_by(train_test_data, subject, activity_name)
 means <- summarize_all(by_subject_activity, funs(mean))
+
 print (means)
 
